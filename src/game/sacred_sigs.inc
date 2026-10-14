@@ -152,7 +152,8 @@ static const Sig::Entry kAddressSigs[] = {
     {"cObject3D_drawModel", "56 8B F1 57 8B 7C 24 0C F6 46 14 02", 0, Sig::Take::Match, &Sacred::Addr::cObject3D_drawModel}, // 0044A9D0, 0044ABA0
     {"cWorldView_initRowWalk", "A0 ?? ?? ?? ?? 83 EC 24 A8 01 53 56 8B F1 75 59", 0, Sig::Take::Match, &Sacred::Addr::cWorldView_initRowWalk}, // 006328C0, 00632A30
     {"g_viewCameraX", "8B 80 C4 9D 00 00 8B 4E 18 03 C8 A1 ?? ?? ?? ??", 12, Sig::Take::Abs32, &Sacred::Addr::g_viewCameraX}, // 00AD7998, 00AD5918
-    {"g_viewCameraY", "A1 ?? ?? ?? ?? 81 C2 00 FE FF FF 05 80 FE FF FF", 1, Sig::Take::Abs32, &Sacred::Addr::g_viewCameraY}, // 00AD799C, 00AD591C
+    {"g_viewCameraY", "A1 ?? ?? ?? ?? 81 C2 00 FE FF FF 05 80 FE FF FF", 1, Sig::Take::Abs32, &Sacred::Addr::g_viewCameraY, true}, // 00AD799C, 00AD591C; Sacred ReBorn rewrites this code
+    {"g_viewCameraY (store)", "03 C8 A1 ?? ?? ?? ?? 89 0D ?? ?? ?? ??", 9, Sig::Take::Abs32, &Sacred::Addr::g_viewCameraY, true}, // 00632409 (ENG), 00632579 (GER and ReBorn): the camera update stores both globals
     {"layerRecordCache", "8B 44 24 04 83 EC 44 53 55 56 57 33 FF", 0, Sig::Take::Match, &Sacred::Addr::layerRecordCache}, // 00635FE0, 006360E0
     {"recordCache", "8B 44 24 04 81 EC A0 00 00 00 85 C0", 0, Sig::Take::Match, &Sacred::Addr::recordCache}, // 00635E50, 00635F50
     {"recordMapFind", "8B 01 56 57 8B 7C 24 0C 8B 48 04 8B D0 85 C9 74 15 8B 37 39 71 10 72 07", 0, Sig::Take::Match, &Sacred::Addr::recordMapFind}, // 00640410, 006404C0
@@ -164,8 +165,8 @@ static const Sig::Entry kAddressSigs[] = {
     {"cParticleSystemStargateUw_vtable", "68 9C 04 00 00 8B CB 89 5C 24 28 E8 ?? ?? ?? ?? 33 ED B8 FF FF FF 8F 8D BB D4 CA 00 00 B9 08 00 00 00 8D 74 24 20 89 6C 24 20 89 6C 24 24 89 6C 24 28 89 6C 24 2C 89 44 24 30 89 6C 24 34 89 6C 24 38 C7 44 24 3C 00 00 80 3F 89 6C 24 48 F3 A5 8D BB F4 CA 00 00 B9 08 00 00 00 8D 74 24 20 89 6C 24 20 89 6C 24 24 89 6C 24 28 89 6C 24 2C 89 44 24 30 89 6C 24 34 89 6C 24 38 89 6C 24 3C C7 03 ?? ?? ?? ??", 129, Sig::Take::Abs32, &Sacred::Addr::cParticleSystemStargateUw_vtable}, // 00899118, 00897118
     {"g_pGameClient", "8A 8E 18 38 00 00 8B 56 40 51 8B 0D ?? ?? ?? ??", 12, Sig::Take::Abs32, &Sacred::Addr::g_pGameClient}, // 0182EBF0, 0182CB70
     {"initNetworkNagleTest", "8B 9E 14 04 04 00 8B 17 33 C0 83 FB 02", 10, Sig::Take::Match, &Sacred::Addr::initNetworkNagleTest}, // 007D310E, 007D294E
-    {"cTextTable_load", "6A FF 68 ?? ?? ?? ?? 64 A1 00 00 00 00 50 64 89 25 00 00 00 00 51 53 56 57 8B 3D ?? ?? ?? ??", 0, Sig::Take::Match, &Sacred::Addr::cTextTable_load}, // 0080E680, 0080DBF0
-    {"textTableAllocCall", "E8 ?? ?? ?? ?? 89 73 04 83 C4 04 D1 EE 85 FF 89 03", 0, Sig::Take::Match, &Sacred::Addr::textTableAllocCall}, // 0080E6F0, 0080DC60
+    {"cTextTable_load", "6A FF 68 ?? ?? ?? ?? 64 A1 00 00 00 00 50 64 89 25 00 00 00 00 51 53 56 57 8B 3D ?? ?? ?? ??", 0, Sig::Take::Match, &Sacred::Addr::cTextTable_load, true}, // 0080E680, 0080DBF0; optional: ReBorn replaces the loader (its own SRglbl.res), and Language::install skips the hook then
+    {"textTableAllocCall", "E8 ?? ?? ?? ?? 89 73 04 83 C4 04 D1 EE 85 FF 89 03", 0, Sig::Take::Match, &Sacred::Addr::textTableAllocCall, true}, // 0080E6F0, 0080DC60; optional, see cTextTable_load
     {"cMSS_ctor", "6A FF 68 ?? ?? ?? ?? 64 A1 00 00 00 00 50 64 89 25 00 00 00 00 81 EC 14 01 00 00", 0, Sig::Take::Match, &Sacred::Addr::cMSS_ctor}, // 00676200, 006764E0
     {"g_soundPakPath", "68 ?? ?? ?? ?? E8 ?? ?? ?? ?? 83 C4 08 3B C3 89 86 F0 B7 00 00", 1, Sig::Take::Abs32, &Sacred::Addr::g_soundPakPath}, // 009D760C, 009D5624
     {"g_language", "EB 21 8B 94 24 04 02 00 00 A1 ?? ?? ?? ?? 6A 01", 10, Sig::Take::Abs32, &Sacred::Addr::g_language}, // 017E7D34, 017E5CB4

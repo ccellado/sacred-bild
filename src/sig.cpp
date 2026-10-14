@@ -126,8 +126,11 @@ size_t Sig::resolve(std::span<const Entry> entries, std::span<const uint8_t> cod
         if (p.hits != 1)
         {
             LOG("Signature {}: {} matches", e.name, p.hits);
-            *e.out.address = 0;
-            ++failed;
+            if (!e.optional)
+            {
+                *e.out.address = 0;
+                ++failed;
+            }
             continue;
         }
         const size_t at = p.hit + e.offset;

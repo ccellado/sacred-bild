@@ -33,6 +33,7 @@ namespace Sig
         uint16_t offset;
         Take take;
         Out out;                // receives the address; 0 if the pattern does not match exactly once
+        bool optional = false;  // a miss is not a failure and leaves the address alone (an alternative entry may set it)
     };
 
     // Scans the host exe's code section once for all entries; returns how many did not resolve (each is logged).

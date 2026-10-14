@@ -559,18 +559,22 @@ namespace
         // Look up a point next to the camera (always in the middle sector) and step back to the corner in whole
         // tiles: (96, 0) on screen is one tile right (row - 1, column + 1), (0, 48) one row down (+1, +1); both keep
         // the tile snapping of initRowWalk. Done every frame so a disagreement with the game's own corner shows up.
-        const int a = floorDiv(*Addr::g_viewCameraX - pos[1], 96);
-        const int b = floorDiv(*Addr::g_viewCameraY - pos[2], 48);
-        const RowPos saved[2] = {*even, *odd};
-        const int32_t probe[3] = {pos[0], pos[1] + a * 96, pos[2] + b * 48};
-        g_origInitRowWalk(self, edx, probe, map);
         int row = 0;
         int col = 0;
-        const bool probed = loadedTile(*even, row, col);
-        *even = saved[0];
-        *odd = saved[1];
-        row -= b - a;
-        col -= a + b;
+        bool probed = false;
+        if (Addr::g_viewCameraX && Addr::g_viewCameraY)
+        {
+            const int a = floorDiv(*Addr::g_viewCameraX - pos[1], 96);
+            const int b = floorDiv(*Addr::g_viewCameraY - pos[2], 48);
+            const RowPos saved[2] = {*even, *odd};
+            const int32_t probe[3] = {pos[0], pos[1] + a * 96, pos[2] + b * 48};
+            g_origInitRowWalk(self, edx, probe, map);
+            probed = loadedTile(*even, row, col);
+            *even = saved[0];
+            *odd = saved[1];
+            row -= b - a;
+            col -= a + b;
+        }
 
         const Walk previous = g_walkOutside;
         if (g_walk.cornerInside)

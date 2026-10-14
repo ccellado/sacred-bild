@@ -273,13 +273,14 @@ namespace
 void Language::install()
 {
     g_operatorNew = reinterpret_cast<OperatorNewFn>(callTarget(Addr::textTableAllocCall));
-    if (g_operatorNew)
+    if (g_operatorNew && Addr::cTextTable_load)
     {
         Patch::hook(g_origLoadText, Addr::cTextTable_load, &hookLoadText, "cTextTable_load");
     }
     else
     {
-        LOG("Language: unexpected code at textTableAllocCall; the text stays the exe's own");
+        // Optional in builds that replace the loader (Sacred ReBorn loads its own SRglbl.res): leave their text alone.
+        LOG("Language: no text table loader in this build; the text stays the exe's own");
     }
     Patch::hook(g_origSoundCtor, Addr::cMSS_ctor, &hookSoundCtor, "cMSS_ctor");
 }
