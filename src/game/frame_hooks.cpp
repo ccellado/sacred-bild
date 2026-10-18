@@ -1,5 +1,6 @@
 #include "game/frame_hooks.h"
 #include "config/ddraw.h"
+#include "ddraw9/device.h"
 #include "game/controller.h"
 #include "game/d3d_stats.h"
 #include "game/device_proxy.h"
@@ -272,6 +273,12 @@ namespace
         {
             proxy->beginBatch();
         }
+        // The world and its ground, layers, and models want the forced filtering (each sub-pass that must not
+        // have it switches it off around its own draws).
+        if (Config::ddraw.d3d9)
+        {
+            DDraw9::setTextureFiltering(true);
+        }
         GroundMesh::beginFrame(self, device);
         g_origWorldRender(self, edx, device);
         if (proxy && device == proxy)
@@ -309,14 +316,12 @@ namespace
         }
         {
             UiCanvas::Scope ui;
-            // Linear magnification is for the world's ground (its crawl while scrolling); the UI pass draws tiled
-            // water and other sprites from tile-set textures, where linear sampling bleeds the neighboring tile in
-            // at every quad edge (a grid of seams on the character selection). Point filtering for this pass.
-            const bool pointUi = Config::ddraw.d3d9 && Config::render.linearMagnify && device;
-            if (pointUi)
+            // Sub-rect textures (the tiled water of the menu and the character selection) bleed the neighboring
+            // tile in at every quad edge when filtered: the UI pass keeps the game's own point filtering.
+            const bool filterUi = Config::ddraw.d3d9 && device;
+            if (filterUi)
             {
-                device->SetTextureStageState(0, D3DTSS_MAGFILTER, D3DTFG_POINT);
-                device->SetTextureStageState(1, D3DTSS_MAGFILTER, D3DTFG_POINT);
+                DDraw9::setTextureFiltering(false);
             }
             // Batch this pass too when the canvas does not remap its draws: a modified exe (Sacred ReBorn) draws
             // the menu and character-selection water as more than a thousand unmerged TL quads per frame, each with
@@ -332,10 +337,9 @@ namespace
             {
                 proxy->endBatch();
             }
-            if (pointUi)
+            if (filterUi)
             {
-                device->SetTextureStageState(0, D3DTSS_MAGFILTER, D3DTFG_LINEAR);
-                device->SetTextureStageState(1, D3DTSS_MAGFILTER, D3DTFG_LINEAR);
+                DDraw9::setTextureFiltering(true);
             }
         }
         D3DStats::mark(D3DStats::TGameAfterUi);
