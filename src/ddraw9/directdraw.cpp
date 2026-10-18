@@ -5,6 +5,7 @@
 #include "ddraw9/gpu.h"
 #include "ddraw9/surface.h"
 #include "ddraw9/vertex_buffer.h"
+#include "config.h"
 #include "log.h"
 
 #include <algorithm>
@@ -103,6 +104,16 @@ namespace DDraw9
             {
                 modes.push_back({desktop.Width, desktop.Height, bpp, refreshRates ? desktop.RefreshRate : 0});
                 modes.push_back({1024, 768, bpp, refreshRates ? 60u : 0});
+                if (const float scale = Config::ddraw.renderScale; scale > 0.0f)
+                {
+                    // A mode smaller than the desktop (RenderScale): the game renders at it, the backend upscales.
+                    const auto w = static_cast<UINT>(desktop.Width * scale) & ~1u;
+                    const auto h = static_cast<UINT>(desktop.Height * scale) & ~1u;
+                    if (w >= 640 && h >= 480)
+                    {
+                        modes.push_back({w, h, bpp, refreshRates ? desktop.RefreshRate : 0});
+                    }
+                }
             }
             std::sort(modes.begin(), modes.end());
             modes.erase(std::unique(modes.begin(), modes.end()), modes.end());

@@ -86,6 +86,7 @@ void ConfigFile::load(const std::wstring& gameDir)
     Config::ddraw.d3d9 = _wcsicmp(readString(ini, L"DDraw", L"Backend", L"d3d9").c_str(), L"chain") != 0;
     Config::ddraw.chain = readString(ini, L"DDraw", L"Chain", Config::ddraw.chain);
     Config::ddraw.d3d9Path = readString(ini, L"DDraw", L"D3D9", L"");
+    Config::ddraw.renderScale = static_cast<float>(_wtof(readString(ini, L"DDraw", L"RenderScale", L"0").c_str()));
     Config::ddraw.mediaFoundation = Config::ddraw.d3d9 || readBool(ini, L"DDraw", L"MediaFoundation", Config::ddraw.mediaFoundation);
     Config::display.width = readInt(ini, L"Display", L"Width", Config::display.width);
     Config::display.height = readInt(ini, L"Display", L"Height", Config::display.height);
@@ -158,10 +159,10 @@ void ConfigFile::load(const std::wstring& gameDir)
     Config::debug.skinCheck = readInt(ini, L"Debug", L"SkinCheck", Config::debug.skinCheck) != 0;
     Config::debug.animationCheck = readInt(ini, L"Debug", L"AnimationCheck", Config::debug.animationCheck) != 0;
 
-    LOG("Config: HideSettingsWindow={} Backend={} D3D9='{}' MediaFoundation={} Width={} Height={} Borderless={} ClipCursor={} FpsLimit={} FpsLimitInactive={} VSync={} MaxFrameLatency={} UI.Scale={} UI.ScaleMode={} UI.LinearFilter={} UI.Anchor={} TextureBudgetMB={} Batch={} "
+    LOG("Config: HideSettingsWindow={} Backend={} D3D9='{}' RenderScale={} MediaFoundation={} Width={} Height={} Borderless={} ClipCursor={} FpsLimit={} FpsLimitInactive={} VSync={} MaxFrameLatency={} UI.Scale={} UI.ScaleMode={} UI.LinearFilter={} UI.Anchor={} TextureBudgetMB={} Batch={} "
         "BatchNoClip={} BatchVertexBuffer={} BatchModels={} BatchGround={} BatchSprites={} GroundMesh={} GpuSkinning={} OffscreenPoses={} AsyncAnimation={} AnimationThreads={} RecordIndex={} SoundLock={} FastMath={} WarmFileCache={} Atlas={} ({} px, {} pages, textures <= {}) "
         "Screenshot.Format={} Net.Relay={} Net.Port={} Net.Hosts='{}' Net.NoDelay={} Net.JoinTimeout={} Net.Udp={} Net.Matchmaker='{}' Net.Publish={} Net.Prefer={} D3DStats={} Profiler={} ({} us) UiTrace={} CrashDump={} MovieFallback={} SkinCheck={} AnimationCheck={}",
-        !Config::launcher.settingsWindow, Config::ddraw.d3d9 ? "d3d9" : "chain", ascii(Config::ddraw.d3d9Path), Config::ddraw.mediaFoundation, Config::display.width, Config::display.height,
+        !Config::launcher.settingsWindow, Config::ddraw.d3d9 ? "d3d9" : "chain", ascii(Config::ddraw.d3d9Path), Config::ddraw.renderScale, Config::ddraw.mediaFoundation, Config::display.width, Config::display.height,
         Config::display.frame == Config::Display::Frame::Auto ? "auto" : Config::display.frame == Config::Display::Frame::Never ? "1" : "0", Config::display.clipCursor, Config::display.fpsLimit, Config::display.fpsLimitInactive,
         Config::display.vsync, Config::display.maxFrameLatency, Config::ui.scale,
         Config::ui.scaleMenus ? "Full" : "InGame", Config::ui.linearFilter, Config::ui.anchor,

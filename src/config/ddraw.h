@@ -16,6 +16,9 @@ namespace Config
         // Movies through Media Foundation instead of the game's DirectShow/DirectDraw path. Backend=d3d9 always does
         // (DirectShow can't decode into its surfaces); with Backend=chain this decides.
         bool mediaFoundation = true;
+        // Adds a display mode at this fraction of the desktop mode (e.g. 0.75), for a softer look on old games:
+        // the game renders at the smaller mode and the backend upscales to the window. 0 = off.
+        float renderScale = 0.0f;
     };
     inline DDraw ddraw;
 }
