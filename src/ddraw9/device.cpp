@@ -5,6 +5,7 @@
 #include "ddraw9/surface.h"
 #include "ddraw9/vertex_buffer.h"
 #include "render/fvf.h"
+#include "config/render.h"
 #include "log.h"
 
 #include <intrin.h>
@@ -521,12 +522,21 @@ namespace DDraw9
             break;
         case D3DTSS_MINFILTER:
             // D3DTFN_POINT, LINEAR, ANISOTROPIC
-            setSamplerState9(stage, d9::D3DSAMP_MINFILTER, value == D3DTFN_POINT ? d9::D3DTEXF_POINT
+            setSamplerState9(stage, d9::D3DSAMP_MINFILTER,
+                Config::render.anisotropy > 0 ? d9::D3DTEXF_ANISOTROPIC
+                : value == D3DTFN_POINT ? d9::D3DTEXF_POINT
                 : value == D3DTFN_ANISOTROPIC ? d9::D3DTEXF_ANISOTROPIC : d9::D3DTEXF_LINEAR);
+            if (Config::render.anisotropy > 0)
+            {
+                // Magnification keeps the game's own filter: the near view stays as crisp as it was.
+                setSamplerState9(stage, d9::D3DSAMP_MAXANISOTROPY, static_cast<DWORD>(Config::render.anisotropy));
+            }
             break;
         case D3DTSS_MIPFILTER:
             // D3DTFP_NONE, POINT, LINEAR
-            setSamplerState9(stage, d9::D3DSAMP_MIPFILTER, value == D3DTFP_POINT ? d9::D3DTEXF_POINT
+            setSamplerState9(stage, d9::D3DSAMP_MIPFILTER,
+                Config::render.anisotropy > 0 ? d9::D3DTEXF_LINEAR
+                : value == D3DTFP_POINT ? d9::D3DTEXF_POINT
                 : value == D3DTFP_LINEAR ? d9::D3DTEXF_LINEAR : d9::D3DTEXF_NONE);
             break;
         case D3DTSS_MIPMAPLODBIAS: setSamplerState9(stage, d9::D3DSAMP_MIPMAPLODBIAS, value); break;

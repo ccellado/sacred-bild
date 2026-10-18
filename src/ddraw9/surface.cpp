@@ -2,6 +2,7 @@
 #include "ddraw9/directdraw.h"
 #include "ddraw9/format.h"
 #include "ddraw9/gpu.h"
+#include "config/render.h"
 #include "log.h"
 
 #include <algorithm>
@@ -376,14 +377,26 @@ namespace DDraw9
             hr = dev->CreateDepthStencilSurface(w, h, m_format, d9::D3DMULTISAMPLE_NONE, 0, FALSE, &m_depthSurface, nullptr);
             break;
         case Kind::Texture:
-            hr = dev->CreateTexture(w, h, 1, 0, m_format, d9::D3DPOOL_DEFAULT, &m_gpuTexture, nullptr);
+        {
+            // With forced anisotropic filtering the textures need mipmaps, or minification still shimmers; ask the
+            // driver to generate the levels, and fall back to the single level it always was if that is refused.
+            const bool mips = Config::render.anisotropy > 0;
+            if (mips)
+            {
+                hr = dev->CreateTexture(w, h, 0, D3DUSAGE_AUTOGENMIPMAP, m_format, d9::D3DPOOL_DEFAULT, &m_gpuTexture, nullptr);
+            }
+            if (!mips || FAILED(hr))
+            {
+                hr = dev->CreateTexture(w, h, 1, 0, m_format, d9::D3DPOOL_DEFAULT, &m_gpuTexture, nullptr);
+            }
             if (SUCCEEDED(hr))
             {
                 m_gpuTexture->GetSurfaceLevel(0, &m_gpuLevel);
             }
             if (SUCCEEDED(hr) && !m_gpuOnly)
             {
-                hr = dev->CreateTexture(w, h, 1, 0, m_format, d9::D3DPOOL_SYSTEMMEM, &m_sysTexture, nullptr);
+                // The same level count as the GPU copy: UpdateTexture is the strictest about that.
+                hr = dev->CreateTexture(w, h, mips ? 0 : 1, 0, m_format, d9::D3DPOOL_SYSTEMMEM, &m_sysTexture, nullptr);
                 if (SUCCEEDED(hr))
                 {
                     m_sysTexture->GetSurfaceLevel(0, &m_sysLevel);
@@ -391,6 +404,7 @@ namespace DDraw9
                 }
             }
             break;
+        }
         default:
             break;
         }

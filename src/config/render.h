@@ -29,6 +29,9 @@ namespace Config
         // shader in a few draws per frame, instead of the game rebuilding and drawing every tile and blend layer each
         // frame (Direct3D 9 backend only).
         bool groundMesh = true;
+        // Anisotropic filtering forced on minification, with mipmaps generated for the textures (0 = off, 1..16).
+        // Magnification keeps the game's own filter, so the near view stays exactly as crisp.
+        int anisotropy = 0;
         // Characters skinned in a vertex shader instead of by Granny on the CPU (Direct3D 9 backend only).
         bool gpuSkinning = true;
         // Skeletons not drawn in the last frames are posed every Nth frame instead of every frame (1 = every frame).
