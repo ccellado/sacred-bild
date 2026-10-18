@@ -120,6 +120,7 @@ void ConfigFile::load(const std::wstring& gameDir)
     Config::render.batchSprites = readInt(ini, L"Render", L"BatchSprites", Config::render.batchSprites) != 0;
     Config::render.batchUi = readInt(ini, L"Render", L"BatchUi", Config::render.batchUi) != 0;
     Config::render.anisotropy = readInt(ini, L"Render", L"Anisotropy", Config::render.anisotropy);
+    Config::render.linearMagnify = readInt(ini, L"Render", L"LinearMagnify", Config::render.linearMagnify) != 0;
     Config::render.groundMesh = readInt(ini, L"Render", L"GroundMesh", Config::render.groundMesh) != 0;
     Config::render.gpuSkinning = readInt(ini, L"Render", L"GpuSkinning", Config::render.gpuSkinning) != 0;
     Config::render.offscreenPoses = readInt(ini, L"Render", L"OffscreenPoses", Config::render.offscreenPoses);
