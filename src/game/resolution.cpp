@@ -54,6 +54,7 @@ namespace
 
     int g_width = 1024;
     int g_height = 768;
+    bool g_adapted = false;      // SacredBild's resolution adaptation is in effect (a modified exe may handle it itself)
 
     // Redirect targets for patched memory operands; must live at fixed addresses.
     float g_widthF = 1024.0f;
@@ -805,6 +806,7 @@ namespace
 int Resolution::width() { return g_width; }
 int Resolution::height() { return g_height; }
 bool Resolution::active() { return g_width != 1024 || g_height != 768; }
+bool Resolution::adapted() { return g_adapted; }
 
 void Resolution::refresh()
 {
@@ -861,6 +863,22 @@ void Resolution::install()
         entries.push_back({"resolution site", s.pattern, s.offset, Sig::Take::Match, &addrs[i]});
     }
     Sig::resolve(entries);
+    size_t missing = 0;
+    for (size_t i = 0; i < std::size(kResolutionSites); ++i)
+    {
+        missing += addrs[i] ? 0 : 1;
+    }
+    if (missing)
+    {
+        // A modified exe (Sacred ReBorn replaces these constants with globals it computes from its own HD
+        // resolution): patching the rest would mix both systems' geometry. Its own widescreen code owns the
+        // resolution; SacredBild keeps the backend, the window and the frame hooks, and skips the adaptation
+        // (the UI canvas checks adapted() as well).
+        LOG("Resolution: {} of {} sites not found; a modified exe handles the resolution itself, SacredBild does not "
+            "adapt it", missing, std::size(kResolutionSites));
+        return;
+    }
+    g_adapted = true;
     int patched = 0;
     for (size_t i = 0; i < std::size(kResolutionSites); ++i)
     {

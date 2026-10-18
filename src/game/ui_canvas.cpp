@@ -453,7 +453,7 @@ void UiCanvas::resume(int depth)
 
 void UiCanvas::install()
 {
-    if (!Resolution::active())
+    if (!Resolution::active() || !Resolution::adapted())
     {
         return;
     }

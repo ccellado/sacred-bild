@@ -14,6 +14,7 @@ namespace Resolution
     int width();
     int height();
     bool active();      // false when running at the native 1024x768
+    bool adapted();     // false when a modified exe (Sacred ReBorn) handles the resolution itself
 
     // Re-reads g_unzoomedProjection for the camera conversion fix (call once per frame on the render thread).
     void refresh();
