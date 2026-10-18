@@ -517,7 +517,9 @@ namespace DDraw9
         case D3DTSS_BORDERCOLOR: setSamplerState9(stage, d9::D3DSAMP_BORDERCOLOR, value); break;
         case D3DTSS_MAGFILTER:
             // D3DTFG_POINT, LINEAR, FLATCUBIC, GAUSSIANCUBIC, ANISOTROPIC
-            setSamplerState9(stage, d9::D3DSAMP_MAGFILTER, value == D3DTFG_POINT ? d9::D3DTEXF_POINT
+            setSamplerState9(stage, d9::D3DSAMP_MAGFILTER,
+                Config::render.linearMagnify ? d9::D3DTEXF_LINEAR
+                : value == D3DTFG_POINT ? d9::D3DTEXF_POINT
                 : value == D3DTFG_ANISOTROPIC ? d9::D3DTEXF_ANISOTROPIC : d9::D3DTEXF_LINEAR);
             break;
         case D3DTSS_MINFILTER:

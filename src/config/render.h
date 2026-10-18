@@ -32,6 +32,9 @@ namespace Config
         // Anisotropic filtering forced on minification, with mipmaps generated for the textures (0 = off, 1..16).
         // Magnification keeps the game's own filter, so the near view stays exactly as crisp.
         int anisotropy = 0;
+        // Linear magnification for the textures (the game's own is point filtering, which crawls when the camera
+        // scrolls at about one texel per pixel, as on the isometric ground).
+        bool linearMagnify = false;
         // Characters skinned in a vertex shader instead of by Granny on the CPU (Direct3D 9 backend only).
         bool gpuSkinning = true;
         // Skeletons not drawn in the last frames are posed every Nth frame instead of every frame (1 = every frame).
