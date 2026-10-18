@@ -5,7 +5,7 @@
 #include "ddraw9/gpu.h"
 #include "ddraw9/surface.h"
 #include "ddraw9/vertex_buffer.h"
-#include "config.h"
+#include "config/ddraw.h"
 #include "log.h"
 
 #include <algorithm>
