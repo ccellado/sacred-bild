@@ -562,19 +562,19 @@ namespace
         int row = 0;
         int col = 0;
         bool probed = false;
+        const RowPos saved[2] = {*even, *odd};
         if (Addr::g_viewCameraX && Addr::g_viewCameraY)
         {
             const int a = floorDiv(*Addr::g_viewCameraX - pos[1], 96);
             const int b = floorDiv(*Addr::g_viewCameraY - pos[2], 48);
-            const RowPos saved[2] = {*even, *odd};
             const int32_t probe[3] = {pos[0], pos[1] + a * 96, pos[2] + b * 48};
             g_origInitRowWalk(self, edx, probe, map);
             probed = loadedTile(*even, row, col);
-            *even = saved[0];
-            *odd = saved[1];
             row -= b - a;
             col -= a + b;
         }
+        *even = saved[0];
+        *odd = saved[1];
 
         const Walk previous = g_walkOutside;
         if (g_walk.cornerInside)
