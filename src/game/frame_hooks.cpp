@@ -311,7 +311,8 @@ namespace
             // Batch this pass too when the canvas does not remap its draws: a modified exe (Sacred ReBorn) draws
             // the menu and character-selection water as more than a thousand unmerged TL quads per frame, each with
             // its texture stage states set again; the batcher absorbs the redundant sets and merges the quads.
-            DeviceProxy* proxy = device && !UiCanvas::enabled() ? DeviceProxy::instance() : nullptr;
+            DeviceProxy* proxy = device && !UiCanvas::enabled() && Config::render.batchUi ? DeviceProxy::instance()
+                                                                                        : nullptr;
             if (proxy && device == proxy)
             {
                 proxy->beginBatch();

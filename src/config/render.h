@@ -22,6 +22,9 @@ namespace Config
         // The sprite batcher (water tiles, objects) hands its texture and quads to the batcher in one call instead of
         // two device calls per flush.
         bool batchSprites = true;
+        // Batch the UI render pass as well (menus, and a modified exe's water scenes). Off by default: a modified
+        // exe's layered water renders wrong when merged (stripes, flicker), so it needs more work.
+        bool batchUi = false;
         // The ground's tiles kept in vertex buffers per sector (built once as they come into view) and drawn by a vertex
         // shader in a few draws per frame, instead of the game rebuilding and drawing every tile and blend layer each
         // frame (Direct3D 9 backend only).
