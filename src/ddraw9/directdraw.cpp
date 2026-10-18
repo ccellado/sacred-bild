@@ -107,8 +107,9 @@ namespace DDraw9
                 if (const float scale = Config::ddraw.renderScale; scale > 0.0f)
                 {
                     // A mode smaller than the desktop (RenderScale): the game renders at it, the backend upscales.
-                    const auto w = static_cast<UINT>(desktop.Width * scale) & ~1u;
-                    const auto h = static_cast<UINT>(desktop.Height * scale) & ~1u;
+                    // Multiples of 4, so halving it (centered layouts) stays whole.
+                    const auto w = static_cast<UINT>(desktop.Width * scale) & ~3u;
+                    const auto h = static_cast<UINT>(desktop.Height * scale) & ~3u;
                     if (w >= 640 && h >= 480)
                     {
                         modes.push_back({w, h, bpp, refreshRates ? desktop.RefreshRate : 0});

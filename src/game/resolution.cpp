@@ -273,13 +273,19 @@ namespace
         // for both), which an exclusive mode never showed. The Direct3D 9 backend emulates fullscreen in the window and
         // presents into its client area: the mode's size centered on the screen, as when windowed.
         const int screenW = GetSystemMetrics(SM_CXSCREEN);
-        if (Config::ddraw.d3d9 && x == 0 && y == 0 && cx == screenW && cy == screenW && flags == SWP_SHOWWINDOW)
+        const bool square = cx == screenW && cy == screenW;
+        // The original call: x, y 0 and only SWP_SHOWWINDOW. A modified exe that handles the resolution itself may
+        // re-init after a focus change with other flags (SWP_NOMOVE and the like): a square screen-sized window is
+        // unambiguous, so accept any flags for it then.
+        const bool original = x == 0 && y == 0 && flags == SWP_SHOWWINDOW;
+        if (Config::ddraw.d3d9 && square && (original || !Resolution::adapted()))
         {
             const int screenH = GetSystemMetrics(SM_CYSCREEN);
             cx = g_width;
             cy = g_height;
             x = (screenW - cx) / 2;
             y = (screenH - cy) / 2;
+            flags &= ~(SWP_NOMOVE | SWP_NOSIZE);
             LOG("Main window: fullscreen as a {}x{} window", cx, cy);
         }
         if (window && window == g_mainWindow && g_framed && !(flags & SWP_NOSIZE))

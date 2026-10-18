@@ -257,8 +257,10 @@ namespace
         D3DStats::Scope s{D3DStats::TWorld};
         D3DStats::PassScope pass{D3DStats::PWorld};
         // In game only Z is cleared: the ground covers 1024x768, but anything it leaves uncovered at larger
-        // sizes (map edges, extreme zoom) would show old frames.
-        if (Resolution::active() && device)
+        // sizes (map edges, extreme zoom) would show old frames. A modified exe that handles the resolution itself
+        // (Sacred ReBorn) covers what it draws at its own mode; the clear would only expose its rounding gaps as
+        // black lines.
+        if (Resolution::active() && Resolution::adapted() && device)
         {
             Resolution::refresh();
             device->Clear(0, nullptr, D3DCLEAR_TARGET, 0xFF000000, 1.0f, 0);
