@@ -1,4 +1,5 @@
 #include "game/frame_hooks.h"
+#include "config/ddraw.h"
 #include "game/controller.h"
 #include "game/d3d_stats.h"
 #include "game/device_proxy.h"
@@ -308,6 +309,15 @@ namespace
         }
         {
             UiCanvas::Scope ui;
+            // Linear magnification is for the world's ground (its crawl while scrolling); the UI pass draws tiled
+            // water and other sprites from tile-set textures, where linear sampling bleeds the neighboring tile in
+            // at every quad edge (a grid of seams on the character selection). Point filtering for this pass.
+            const bool pointUi = Config::ddraw.d3d9 && Config::render.linearMagnify && device;
+            if (pointUi)
+            {
+                device->SetTextureStageState(0, D3DTSS_MAGFILTER, D3DTFG_POINT);
+                device->SetTextureStageState(1, D3DTSS_MAGFILTER, D3DTFG_POINT);
+            }
             // Batch this pass too when the canvas does not remap its draws: a modified exe (Sacred ReBorn) draws
             // the menu and character-selection water as more than a thousand unmerged TL quads per frame, each with
             // its texture stage states set again; the batcher absorbs the redundant sets and merges the quads.
@@ -321,6 +331,11 @@ namespace
             if (proxy && device == proxy)
             {
                 proxy->endBatch();
+            }
+            if (pointUi)
+            {
+                device->SetTextureStageState(0, D3DTSS_MAGFILTER, D3DTFG_LINEAR);
+                device->SetTextureStageState(1, D3DTSS_MAGFILTER, D3DTFG_LINEAR);
             }
         }
         D3DStats::mark(D3DStats::TGameAfterUi);
