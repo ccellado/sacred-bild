@@ -217,6 +217,15 @@ namespace DDraw9
     // ------------------------------------------------------------------------------------------------------------
     // Creation
 
+    namespace
+    {
+        // Set by the frame hooks per render pass: sub-rect textures (tile sets, sprite sheets) bleed the neighboring
+        // pixels in at their edges when filtered, so only the passes that want it get it (ground, layers, models -
+        // not water, objects, and the UI).
+        std::atomic<bool> g_textureFiltering{true};
+        Device* g_currentDevice = nullptr;
+    }
+
     Device::Device(DirectDraw* ddraw, d9::IDirect3DDevice9Ex* dev) : m_ddraw(ddraw), m_dev(dev)
     {
         m_ddraw->AddRef();
