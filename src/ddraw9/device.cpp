@@ -511,14 +511,6 @@ namespace DDraw9
         return D3D_OK;
     }
 
-    namespace
-    {
-        // Set by the frame hooks per render pass: sub-rect textures (tile sets, sprite sheets) bleed the neighboring
-        // pixels in at their edges when filtered, so only the passes that want filtering get it (ground, layers,
-        // models - not water, objects, and the UI).
-        std::atomic<bool> g_textureFiltering{true};
-        Device* g_currentDevice = nullptr;
-    }
 
     // Re-applies the game's own filter states through the translation, which forces them while the filtering is on
     // (LinearMagnify, Anisotropy) and translates them faithfully while it is off - the game sets some of them only
