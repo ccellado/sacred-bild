@@ -104,6 +104,10 @@ namespace DDraw9
         STDMETHOD(GetClipPlane)(DWORD index, D3DVALUE* plane) override;
         STDMETHOD(GetInfo)(DWORD id, LPVOID info, DWORD size) override;
 
+        // Texture filter switching (setTextureFiltering): re-applies the game's own filter states through the
+        // translation, which forces them while the filtering is on and translates them faithfully while it is off.
+        void applyFilters();
+
     private:
         static constexpr DWORD kRenderStates = 256;
         static constexpr DWORD kStages = 8;

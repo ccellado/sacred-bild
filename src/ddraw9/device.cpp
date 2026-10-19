@@ -221,6 +221,7 @@ namespace DDraw9
     {
         m_ddraw->AddRef();
         m_dev->AddRef();
+        g_currentDevice = this;
         if (!g_deviceVtable)
         {
             g_deviceVtable = *reinterpret_cast<void* const*>(static_cast<IDirect3DDevice7*>(this));
@@ -512,35 +513,35 @@ namespace DDraw9
         // pixels in at their edges when filtered, so only the passes that want filtering get it (ground, layers,
         // models - not water, objects, and the UI).
         std::atomic<bool> g_textureFiltering{true};
+        Device* g_currentDevice = nullptr;
+    }
+
+    // Re-applies the game's own filter states through the translation, which forces them while the filtering is on
+    // (LinearMagnify, Anisotropy) and translates them faithfully while it is off - the game sets some of them only
+    // once, so switching must not leave the forced values in place.
+    void Device::applyFilters()
+    {
+        const bool filtering = g_textureFiltering.load(std::memory_order_relaxed);
+        for (DWORD stage = 0; stage < 2; ++stage)
+        {
+            if (filtering && Config::render.linearMagnify)
+            {
+                applyStageState(stage, D3DTSS_MAGFILTER, m_tss[stage][D3DTSS_MAGFILTER]);
+            }
+            if (filtering && Config::render.anisotropy > 0)
+            {
+                applyStageState(stage, D3DTSS_MINFILTER, m_tss[stage][D3DTSS_MINFILTER]);
+                applyStageState(stage, D3DTSS_MIPFILTER, m_tss[stage][D3DTSS_MIPFILTER]);
+            }
+        }
     }
 
     void setTextureFiltering(bool on)
     {
         g_textureFiltering.store(on, std::memory_order_relaxed);
-        d9::IDirect3DDevice9Ex* dev = Gpu::existingDevice();
-        if (!dev)
+        if (g_currentDevice)
         {
-            return;
-        }
-        for (DWORD stage = 0; stage < 2; ++stage)
-        {
-            if (Config::render.linearMagnify)
-            {
-                dev->SetSamplerState(stage, d9::D3DSAMP_MAGFILTER,
-                    on ? d9::D3DTEXF_LINEAR : d9::D3DTEXF_POINT);
-            }
-            if (Config::render.anisotropy > 0)
-            {
-                dev->SetSamplerState(stage, d9::D3DSAMP_MINFILTER,
-                    on ? d9::D3DTEXF_ANISOTROPIC : d9::D3DTEXF_POINT);
-                dev->SetSamplerState(stage, d9::D3DSAMP_MIPFILTER,
-                    on ? d9::D3DTEXF_LINEAR : d9::D3DTEXF_NONE);
-                if (on)
-                {
-                    dev->SetSamplerState(stage, d9::D3DSAMP_MAXANISOTROPY,
-                        static_cast<DWORD>(Config::render.anisotropy));
-                }
-            }
+            g_currentDevice->applyFilters();
         }
     }
 
