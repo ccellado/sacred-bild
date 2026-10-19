@@ -239,6 +239,10 @@ namespace DDraw9
 
     Device::~Device()
     {
+        if (g_currentDevice == this)
+        {
+            g_currentDevice = nullptr;
+        }
         for (Surface*& texture : m_textures)
         {
             if (texture)
