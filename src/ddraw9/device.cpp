@@ -8,6 +8,8 @@
 #include "config/render.h"
 #include "log.h"
 
+#include <atomic>
+
 #include <intrin.h>
 #include <algorithm>
 #include <cstring>
@@ -504,8 +506,25 @@ namespace DDraw9
         return D3D_OK;
     }
 
+    namespace
+    {
+        // Set by the frame hooks per render pass: sub-rect textures (tile sets, sprite sheets) bleed the neighboring
+        // pixels in at their edges when filtered, so only the passes that want filtering get it (ground, layers,
+        // models - not water, objects, and the UI).
+        std::atomic<bool> g_textureFiltering{true};
+    }
+
+    void setTextureFiltering(bool on)
+    {
+        // Only the flag: the game and the batcher set the filters per draw, and the translation applies or ignores
+        // the forcing per it. Direct writes here would clobber states the game sets only once (its water relies on
+        // them) and fight the batcher's deferred state application.
+        g_textureFiltering.store(on, std::memory_order_relaxed);
+    }
+
     HRESULT Device::applyStageState(DWORD stage, DWORD type, DWORD value)
     {
+        const bool filtering = g_textureFiltering.load(std::memory_order_relaxed);
         switch (type)
         {
         case D3DTSS_ADDRESS:
@@ -518,26 +537,25 @@ namespace DDraw9
         case D3DTSS_MAGFILTER:
             // D3DTFG_POINT, LINEAR, FLATCUBIC, GAUSSIANCUBIC, ANISOTROPIC
             setSamplerState9(stage, d9::D3DSAMP_MAGFILTER,
-                Config::render.linearMagnify ? d9::D3DTEXF_LINEAR
+                filtering && Config::render.linearMagnify ? d9::D3DTEXF_LINEAR
                 : value == D3DTFG_POINT ? d9::D3DTEXF_POINT
                 : value == D3DTFG_ANISOTROPIC ? d9::D3DTEXF_ANISOTROPIC : d9::D3DTEXF_LINEAR);
             break;
         case D3DTSS_MINFILTER:
             // D3DTFN_POINT, LINEAR, ANISOTROPIC
             setSamplerState9(stage, d9::D3DSAMP_MINFILTER,
-                Config::render.anisotropy > 0 ? d9::D3DTEXF_ANISOTROPIC
+                filtering && Config::render.anisotropy > 0 ? d9::D3DTEXF_ANISOTROPIC
                 : value == D3DTFN_POINT ? d9::D3DTEXF_POINT
                 : value == D3DTFN_ANISOTROPIC ? d9::D3DTEXF_ANISOTROPIC : d9::D3DTEXF_LINEAR);
-            if (Config::render.anisotropy > 0)
+            if (filtering && Config::render.anisotropy > 0)
             {
-                // Magnification keeps the game's own filter: the near view stays as crisp as it was.
                 setSamplerState9(stage, d9::D3DSAMP_MAXANISOTROPY, static_cast<DWORD>(Config::render.anisotropy));
             }
             break;
         case D3DTSS_MIPFILTER:
             // D3DTFP_NONE, POINT, LINEAR
             setSamplerState9(stage, d9::D3DSAMP_MIPFILTER,
-                Config::render.anisotropy > 0 ? d9::D3DTEXF_LINEAR
+                filtering && Config::render.anisotropy > 0 ? d9::D3DTEXF_LINEAR
                 : value == D3DTFP_POINT ? d9::D3DTEXF_POINT
                 : value == D3DTFP_LINEAR ? d9::D3DTEXF_LINEAR : d9::D3DTEXF_NONE);
             break;

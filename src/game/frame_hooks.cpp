@@ -1,4 +1,6 @@
 #include "game/frame_hooks.h"
+#include "config/ddraw.h"
+#include "ddraw9/device.h"
 #include "game/controller.h"
 #include "game/d3d_stats.h"
 #include "game/device_proxy.h"
@@ -271,6 +273,12 @@ namespace
         {
             proxy->beginBatch();
         }
+        // The world and its ground, layers, and models want the forced filtering (each sub-pass that must not
+        // have it switches it off around its own draws).
+        if (Config::ddraw.d3d9)
+        {
+            DDraw9::setTextureFiltering(true);
+        }
         GroundMesh::beginFrame(self, device);
         g_origWorldRender(self, edx, device);
         if (proxy && device == proxy)
@@ -308,6 +316,13 @@ namespace
         }
         {
             UiCanvas::Scope ui;
+            // Sub-rect textures (the tiled water of the menu and the character selection) bleed the neighboring
+            // tile in at every quad edge when filtered: the UI pass keeps the game's own point filtering.
+            const bool filterUi = Config::ddraw.d3d9 && device;
+            if (filterUi)
+            {
+                DDraw9::setTextureFiltering(false);
+            }
             // Batch this pass too when the canvas does not remap its draws: a modified exe (Sacred ReBorn) draws
             // the menu and character-selection water as more than a thousand unmerged TL quads per frame, each with
             // its texture stage states set again; the batcher absorbs the redundant sets and merges the quads.
@@ -321,6 +336,10 @@ namespace
             if (proxy && device == proxy)
             {
                 proxy->endBatch();
+            }
+            if (filterUi)
+            {
+                DDraw9::setTextureFiltering(true);
             }
         }
         D3DStats::mark(D3DStats::TGameAfterUi);
