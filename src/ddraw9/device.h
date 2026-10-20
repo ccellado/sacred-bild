@@ -22,12 +22,6 @@ namespace DDraw9
     // to sampler states), lights, materials and viewports, so most calls translate one to one. The device keeps
     // the Direct3D 7 state the game set (Get* never reaches Direct3D 9) and the Direct3D 9 state it applied
     // (repeated values are not sent again).
-
-    // Forced texture filtering (LinearMagnify, Anisotropy) on or off for the next draws: set by the frame hooks
-    // around the render passes that want it (ground, layers, models) and the ones that must keep the game's own
-    // point filtering (sub-rect textures: water tiles, objects, the UI).
-    void setTextureFiltering(bool on);
-
     class Device final : public IDirect3DDevice7
     {
     public:
@@ -103,10 +97,6 @@ namespace DDraw9
         STDMETHOD(SetClipPlane)(DWORD index, D3DVALUE* plane) override;
         STDMETHOD(GetClipPlane)(DWORD index, D3DVALUE* plane) override;
         STDMETHOD(GetInfo)(DWORD id, LPVOID info, DWORD size) override;
-
-        // Texture filter switching (setTextureFiltering): re-applies the game's own filter states through the
-        // translation, which forces them while the filtering is on and translates them faithfully while it is off.
-        void applyFilters();
 
     private:
         static constexpr DWORD kRenderStates = 256;

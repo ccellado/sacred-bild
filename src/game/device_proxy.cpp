@@ -569,7 +569,9 @@ void DeviceProxy::fitTexels(DWORD fvf, uint8_t* verts)
     const float w = static_cast<float>(m_texture0Width), h = static_cast<float>(m_texture0Height);
     float eu[2] = {u[0] * w, u[1] * w}, ev[2] = {t[0] * h, t[1] * h};
     // Bilinear sampling reads half a texel around the sample position; point sampling only the texel under it.
-    const bool linear = uiFilter(m_filters[0][0]) != D3DTFG_POINT || uiFilter(m_filters[0][1]) != D3DTFN_POINT;
+    // The forced filtering (LinearMagnify, Anisotropy) samples linearly even where the game asked for point.
+    const bool linear = Config::render.linearMagnify || Config::render.anisotropy > 0
+        || uiFilter(m_filters[0][0]) != D3DTFG_POINT || uiFilter(m_filters[0][1]) != D3DTFN_POINT;
     const float margin = linear ? 0.5f : 0.05f;
     fitTexelAxis(minX, maxX, eu[0], eu[1], margin);
     fitTexelAxis(minY, maxY, ev[0], ev[1], margin);
@@ -578,6 +580,23 @@ void DeviceProxy::fitTexels(DWORD fvf, uint8_t* verts)
         v[i][uv] = eu[isNear(v[i][0], minX) ? 0 : 1] / w;
         v[i][uv + 1] = ev[isNear(v[i][1], minY) ? 0 : 1] / h;
     }
+}
+
+LPVOID DeviceProxy::fitQuadTexels(DWORD fvf, LPVOID verts, DWORD count)
+{
+    if (m_ui || !verts || count != 4 || Fvf::texCount(fvf) == 0 || !Fvf::pretransformed(fvf))
+    {
+        return verts;
+    }
+    if (!Config::render.linearMagnify && Config::render.anisotropy <= 0)
+    {
+        return verts;
+    }
+    const UINT stride = Fvf::stride(fvf);
+    const uint8_t* src = static_cast<const uint8_t*>(verts);
+    m_fitScratch.assign(src, src + stride * count);
+    fitTexels(fvf, m_fitScratch.data());
+    return m_fitScratch.data();
 }
 
 HRESULT DeviceProxy::QueryInterface(REFIID riid, LPVOID* ppvObj)
@@ -847,7 +866,7 @@ HRESULT DeviceProxy::DrawPrimitive(D3DPRIMITIVETYPE type, DWORD fvf, LPVOID vert
     {
         if (Fvf::pretransformed(fvf))
         {
-            return m_batcher->draw(type, fvf, verts, count, nullptr, 0, flags);
+            return m_batcher->draw(type, fvf, fitQuadTexels(fvf, verts, count), count, nullptr, 0, flags);
         }
         if (m_batcher->drawModel(type, fvf, verts, count, nullptr, 0, flags))
         {
@@ -894,6 +913,7 @@ HRESULT DeviceProxy::DrawPrimitive(D3DPRIMITIVETYPE type, DWORD fvf, LPVOID vert
     Scope s{TDraw};
     Overlay3D restore;
     const bool overlay = beginOverlay3D(restore);
+    verts = fitQuadTexels(fvf, verts, count);
     const HRESULT hr = m_real->DrawPrimitive(type, fvf, verts, count, flags);
     if (overlay)
     {
@@ -915,7 +935,7 @@ HRESULT DeviceProxy::DrawIndexedPrimitive(D3DPRIMITIVETYPE type, DWORD fvf, LPVO
     {
         if (Fvf::pretransformed(fvf))
         {
-            return m_batcher->draw(type, fvf, verts, vertCount, indices, indexCount, flags);
+            return m_batcher->draw(type, fvf, fitQuadTexels(fvf, verts, vertCount), vertCount, indices, indexCount, flags);
         }
         if (m_batcher->drawModel(type, fvf, verts, vertCount, indices, indexCount, flags))
         {
@@ -949,6 +969,7 @@ HRESULT DeviceProxy::DrawIndexedPrimitive(D3DPRIMITIVETYPE type, DWORD fvf, LPVO
     Scope s{TDraw};
     Overlay3D restore;
     const bool overlay = beginOverlay3D(restore);
+    verts = fitQuadTexels(fvf, verts, vertCount);
     const HRESULT hr = m_real->DrawIndexedPrimitive(type, fvf, verts, vertCount, indices, indexCount, flags);
     if (overlay)
     {

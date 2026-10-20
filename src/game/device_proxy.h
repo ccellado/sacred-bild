@@ -148,6 +148,9 @@ private:
     // at its middle and the edges stay inside the quad's texels (no seams between UI images under scaling and
     // bilinear filtering). Leaves other quads alone.
     void fitTexels(DWORD fvf, uint8_t* verts);
+    // Quads mapped to a texture sub-rect get their texture coordinates fitted into a scratch copy, so the forced
+    // filtering cannot bleed the surrounding pixels in at the quad's edges. Returns the vertices to draw.
+    LPVOID fitQuadTexels(DWORD fvf, LPVOID verts, DWORD count);
     // `virt` (1024x768 space) mapped into the UI frame and clamped to it.
     D3DVIEWPORT7 canvasViewport(const D3DVIEWPORT7& virt) const;
     // Unconfined (cursor) mode: 3D draws such as the item the cursor carries project into the game's 1024x768
@@ -184,6 +187,7 @@ private:
     D3DVIEWPORT7 m_uiViewport = {};         // viewport as the UI sees it (virtual 1024x768 space)
     DWORD m_filters[2][2] = {{1, 1}, {1, 1}};   // game's MAG/MIN filter for stages 0/1
     std::vector<uint8_t> m_scratch;
+    std::vector<uint8_t> m_fitScratch;     // quads with fitted texture coordinates (fitQuadTexels)
     const void* m_site = nullptr;           // game call site of the current UI draw (diagnostics)
     float m_virtMinX = 0, m_virtMinY = 0, m_virtMaxX = 0, m_virtMaxY = 0;   // its bounds in 1024x768 space
 

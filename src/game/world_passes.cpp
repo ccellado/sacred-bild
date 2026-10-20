@@ -1,7 +1,5 @@
 #include "game/world_passes.h"
-#include "ddraw9/device.h"
 #include "game/d3d_stats.h"
-#include "game/device_proxy.h"
 #include "log.h"
 #include "patch.h"
 #include "sacred/world.h"
@@ -22,22 +20,9 @@ namespace
     decltype(Addr::cWorldView_drawObjects2)::Ptr g_origObjects2 = nullptr;
     decltype(Addr::cObject3D_drawModel)::Ptr g_origDrawModel = nullptr;
 
-    // Pending batched draws must keep the filtering of the pass they were recorded in: flush them before the
-    // switch, or they are submitted (and filtered) when a later pass flushes them.
-    void setTextureFiltering(IDirect3DDevice7* device, bool on)
-    {
-        DeviceProxy* proxy = DeviceProxy::instance();
-        if (device && proxy && device == proxy)
-        {
-            proxy->syncBatch();
-        }
-        DDraw9::setTextureFiltering(on);
-    }
-
     void __fastcall hookTileRow(cWorldView* self, void* edx, IDirect3DDevice7* device, RowPos* rowPos, int detail)
     {
         PassScope s{D3DStats::PRows};
-        setTextureFiltering(device, true);
         g_origTileRow(self, edx, device, rowPos, detail);
     }
 
@@ -57,30 +42,24 @@ namespace
     void __fastcall hookLayers(cWorldView* self, void* edx, IDirect3DDevice7* device)
     {
         PassScope s{D3DStats::PLayers};
-        setTextureFiltering(device, true);
         g_origLayers(self, edx, device);
     }
 
     void __fastcall hookWater(cWorldView* self, void* edx, IDirect3DDevice7* device)
     {
         PassScope s{D3DStats::PWater};
-        // Water tiles are sub-rects of tile-set textures: filtered sampling bleeds the neighboring tile in at
-        // every quad edge.
-        setTextureFiltering(device, false);
         g_origWater(self, edx, device);
     }
 
     void __fastcall hookObjects(cWorldView* self, void* edx, IDirect3DDevice7* device)
     {
         PassScope s{D3DStats::PObjects};
-        setTextureFiltering(device, false);
         g_origObjects(self, edx, device);
     }
 
     void __fastcall hookObjects2(cWorldView* self, void* edx, IDirect3DDevice7* device)
     {
         PassScope s{D3DStats::PObjects2};
-        setTextureFiltering(device, false);
         g_origObjects2(self, edx, device);
     }
 
@@ -89,7 +68,6 @@ namespace
         uint32_t flagsLow, uint32_t flagsHigh)
     {
         PassScope s{D3DStats::PModels};
-        setTextureFiltering(device, true);
         return g_origDrawModel(self, edx, device, model, instance, flagsLow, flagsHigh);
     }
 }
